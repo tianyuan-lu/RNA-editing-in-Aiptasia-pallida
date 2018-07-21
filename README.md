@@ -190,7 +190,7 @@ Researchers familiar with cellular/functional/structural biology of Aiptasia sho
 
 After having pinpointed interested genes, we did PCR verification on extracted RNA (reverse-transcribed to cDNA).
 
-       design_generic_primers.py <reference.genome.fa> <desired.amplicons.tsv>
+       python3 design_generic_primers.py <reference.genome.fa> <desired.amplicons.tsv>
     
 Required format of the tsv file is defined at https://github.com/lyijin/common/blob/master/design_generic_primers.py
 
