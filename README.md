@@ -8,19 +8,21 @@ This workflow requires assembled and annotated reference genome and raw reads. I
 ---
 1. trimming with trimgalore:
 
-		trim_galore --phred33 --length 25 --max_n 2 --trim-n --paired <file_R1.fastq> <file_R2.fastq>
-    
 This step retains paired-end reads longer than 25 bps, with maximum 2 "N"s and without flanking Ns. The trimming applies default low-quality threshold of 20. To adjust: -q <num>
+
+		trim_galore --phred33 --length 25 --max_n 2 --trim-n --paired <file_R1.fastq> <file_R2.fastq>
   
 2. removing first 6 bases:
 
-		awk '{if (NR %2 ==1) print; if (NR %2 ==0) print substr($0, 7)}' <trimmed.file.fastq>
-    
 This step avoids mapping errors caused by random-hexamer primers (F Zhang, 2017).
+
+		awk '{if (NR %2 ==1) print; if (NR %2 ==0) print substr($0, 7)}' <trimmed.file.fastq>
 
 ### Mapping
 ---
 3. mapping with bwa
+
+Index genome and map using bwa mem:
 
 		bwa index <reference.genome.fa>
     
@@ -42,15 +44,17 @@ So alternatively, we started using SPRINT only after obtaining aligned bam files
 
 4. calling RNA editing sites with SPRINT
 
-		sprint_from_bam <sorted.aln.bam> <reference.genome.fa> <output> <location of samtools>
-    
 Results of SPRINT annotate types and strands of transcriptomic variants.
+
+		sprint_from_bam <sorted.aln.bam> <reference.genome.fa> <output> <location of samtools>
 
 5. converting annotation
 
+This step unifies variants based on the "+" strand of the reference. 
+
 		python3 convert.py <RES> > <converted.RES.tsv>
   
-This step unifies variants based on the "+" strand of the reference. To check distribution of variant types:
+To check distribution of variant types:
 
 		awk '{col[$3,$4]++}END{for(i in col) print i, col[i]}' <converted.RES.tsv> | sort -k2 -n -r
     
@@ -58,9 +62,9 @@ Hopefully A>I conversion dominates the distribution.
 
 6. tabulating
 
-		python3 tabulate_tsvs.py <all.converted.RES.tsvs> -k 0 1 2 3 -c 4 5 -v > tabulated.RES.tsv
-    
 This step tabulates all potential RNA editing sites who occur at least once in all replicates.
+
+		python3 tabulate_tsvs.py <all.converted.RES.tsvs> -k 0 1 2 3 -c 4 5 -v > tabulated.RES.tsv
 
 tabulate_tsvs.py can be found at https://github.com/lyijin/working_with_dna_methylation
 
@@ -82,9 +86,9 @@ Then we did comparison between these two to find out: RES only in aposymbiotic, 
 
 8. looking for differentially edited sites
 
-		python3 ttest.py A.bonafide.tsv S.bonafide.tsv > compare_A_to_S.tsv
-    
 This step generates a table containing common RES in aposymbiotic and symbiotic Aiptasia and compares the levels of RNA editing. 
+
+		python3 ttest.py A.bonafide.tsv S.bonafide.tsv > compare_A_to_S.tsv
 
 T test compares mean RNA editing levels of all replicates in aposymbiotic and symbiotic Aiptasia, assuming non-equal variances.
 
@@ -97,6 +101,8 @@ T test compares mean RNA editing levels of all replicates in aposymbiotic and sy
 This step corrects p values using a pre-written script (https://github.com/lyijin/common). Default method is Benjamini-Hochberg.
 
 9. looking for unique RES
+
+The onlyinfirst.py script retrieves those existing only in the first input file:
 
 		python3 onlyinfirst.py A.bonafide.tsv S.bonafide.tsv > onlyinA.tsv
     
